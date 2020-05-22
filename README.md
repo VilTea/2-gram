@@ -30,4 +30,4 @@
 ![](https://raw.githubusercontent.com/VilTea/2-gram/master/Image/Image20200521202528.png)
 
 ## 更新日志
-2020/5/21 - `只完成了分词功能。`
+2020/5/21 - `完成了基本的分词功能。`
