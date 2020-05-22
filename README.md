@@ -6,6 +6,18 @@
 |召回率|85.734634%|
 |F-测度值|86.990296%|
 ## 分词演示
+**使用方法：**
+```Python
+# 训练模型
+    dictname = '30wChinsesSeqDic.txt'   # 词典资源
+    train = 'train.txt'                 # 训练集
+    with open(os.getcwd() + '/' + dictname, encoding='UTF-8-sig') as fp:
+        with open(os.getcwd() + '/' + train, encoding='UTF-8-sig') as f:
+            model = _NGramModel(cdict=fp, train=f, smooth=1)
+# 分词演示
+    text = model.split('什么是金融资本呢？金融资本就是在实现剩余商品到货币的转换以后，在如何分配这些货币资本的问题上纠缠不休的资本。也就是说，金融资本是在工业资本完成了由货币到商品（即购买生产资料和雇工）和再由商品到货币（即产品市场出卖）的两个转换以后，在蛋糕造好了以后，就如何分蛋糕的抢夺中，通过贷款利息、股权和期货交易等等手段大显身手的资本。金融资本本身和商品价值的创造毫无关系，因而它是寄生性的。')
+    print(text)
+```
 **被切分文本：**
 `什么是金融资本呢？金融资本就是在实现剩余商品到货币的转换以后，在如何分配这些货币资本的问题上纠缠不休的资本。也就是说，金融资本是在工业资本完成了由货币到商品（即购买生产资料和雇工）和再由商品到货币（即产品市场出卖）的两个转换以后，在蛋糕造好了以后，就如何分蛋糕的抢夺中，通过贷款利息、股权和期货交易等等手段大显身手的资本。金融资本本身和商品价值的创造毫无关系，因而它是寄生性的。`
 <br>
@@ -16,4 +28,3 @@
   * PyCharm Community Edition 2020.1 x64
   
 ![](https://raw.githubusercontent.com/VilTea/2-gram/master/Image/Image20200521202528.png)
-
