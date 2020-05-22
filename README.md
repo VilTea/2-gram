@@ -28,3 +28,4 @@
   * PyCharm Community Edition 2020.1 x64
   
 ![](https://raw.githubusercontent.com/VilTea/2-gram/master/Image/Image20200521202528.png)
+
