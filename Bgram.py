@@ -256,7 +256,7 @@ class _NGramModel:
             # log ((词频/总字数) / ( (单字1频数/总字数) * (单字2频数/总字数) )
             words[word] = math.log2(words[word] / character[word[0]] / character[word[1]] * total)
         words = sorted(words.items(), key=lambda item: item[1], reverse=True)   # 根据PMI从大到小排序
-        words = dict(words[:len(words)//500 if len(words) >= 500 else 1])       # 保留点互信值排名前0.5%的未登陆词
+        words = dict(words[:len(words)//500 if len(words) >= 500 else 1])       # 保留点互信值排名前0.2%的未登陆词
         temp = words.keys()
         LE = dict.fromkeys(temp, 0)   # 左邻接熵初始化
         RE = dict.fromkeys(temp, 0)   # 右邻接熵初始化
