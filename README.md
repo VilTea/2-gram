@@ -1,4 +1,4 @@
-# 2-gram中文分词模型
+# 2-gram中文分词模型（基于统计）
 ## 模型精度：
 |评价标准|结果|
 |:---:|:---:|
@@ -27,9 +27,8 @@
 * 运行环境
   * PyCharm Community Edition 2020.1 x64
   
-![](https://raw.githubusercontent.com/VilTea/2-gram/master/Image/Image20200521202528.png)
-
+![](https://raw.githubusercontent.com/VilTea/2-gram/master/Image/Image20200521202528.png)<br>
+![](https://raw.githubusercontent.com/VilTea/2-gram/master/Image/Image20200525003852.png)
 ## 更新日志
 2020/5/21 - `完成了基本的分词功能。`<br>
-### Coming soon...
-*未登录词识别*
+2020/5/25 - `完成了基本的未登录词识别功能。（性能并不理想，会尝试在后续的更新中对其性能优化）`
