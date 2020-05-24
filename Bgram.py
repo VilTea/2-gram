@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 
+from collections import Counter
 import numpy as np
+import math
 import time
 import os
 import re
@@ -30,7 +32,6 @@ class _NGramModel:
         """
         模型初始化
         :param cdict: 词典资源
-        :param train: 训练集
         :param smooth: 选取平滑方式序号
         :return: None
         """
@@ -114,7 +115,7 @@ class _NGramModel:
             psn = 0
             temp = -word_max_len
             for flag, word in enumerate(words):
-                if word in self._word_dict.keys():
+                if word in self._word_dict:
                     if self._word_dict[word] > ps[i-1]:
                         ps[i-1] = self._word_dict[word]
                     if flag - temp > i:
@@ -159,7 +160,7 @@ class _NGramModel:
         if word_max_len <= 0:
             return st
         if len(st) <= word_max_len:
-            if st in self._word_dict.keys():
+            if st in self._word_dict:
                 return st
             else:
                 return self._spst(st, word_max_len - 1)
@@ -168,7 +169,7 @@ class _NGramModel:
         words = _word_ngrams(tokens=st, ngram_range=(word_max_len, word_max_len), separator='')
         temp = -word_max_len
         for flag, word in enumerate(words):
-            if word in self._word_dict.keys():
+            if word in self._word_dict:
                 if flag - temp > word_max_len - 1:
                     listcut.append(word)
                     temp = flag
@@ -204,7 +205,7 @@ class _NGramModel:
         probs = list()
         for word in bgramwords:
             pre, wd = word.split(' ')
-            if wd in self._pre_dict.keys() and pre in self._pre_dict[wd].keys():
+            if wd in self._pre_dict and pre in self._pre_dict[wd]:
                 probs.append(self._probf(pre, wd))
             elif pre != 'BOS':
                 probs.append(self._probf())
@@ -227,6 +228,59 @@ class _NGramModel:
         :return: 加一平滑后的结果
         """
         return (self._pre_dict.get(word, dict()).get(word_pre, 0) + 1) / (self._train_dict.get(word, 0) + self._V)
+
+    def findwords(self, text):
+        """
+        未登录词识别（二字词）
+        :param text:语料
+        :return:
+        """
+        # original_txt = text
+        text = text.read()
+        text = re.sub(r'[^\u4e00-\u9fa5]', '', text)
+        #text = re.sub(r'\W+', '', text.replace('_', ''))    # 去除符号
+        #text = re.sub(r'[a-zA-Z0-9]', '', text)             # 去除数字和字母
+        total = len(text)
+        character = dict(Counter(text))
+        original_words = _word_ngrams(tokens=text, ngram_range=(2, 2), separator='')
+
+        words = {}
+        for word in original_words:
+            if word not in self._word_dict:
+                words[word] = words.get(word, 0) + 1
+        words = dict(Counter(words))
+        words = {k: v for k, v in words.items() if v >= 3}      # 去除词频小于3的二字词
+        original_words = words.copy()                           # 保留词频
+        for word in words:
+            # 点互信值(PMI)
+            # log ((词频/总字数) / ( (单字1频数/总字数) * (单字2频数/总字数) )
+            words[word] = math.log2(words[word] / character[word[0]] / character[word[1]] * total)
+        words = sorted(words.items(), key=lambda item: item[1], reverse=True)   # 根据PMI从大到小排序
+        words = dict(words[:len(words)//500 if len(words) >= 500 else 1])       # 保留点互信值排名前0.5%的未登陆词
+        temp = words.keys()
+        LE = dict.fromkeys(temp, 0)   # 左邻接熵初始化
+        RE = dict.fromkeys(temp, 0)   # 右邻接熵初始化
+        for word in LE:
+            ch = re.findall(('(.)(?:%s)') % word, text)
+            ed = len(ch)
+            ch = Counter(ch).values()
+            for v in ch:
+                LE[word] -= v/ed * math.log2(v/ed)
+        for word in RE:
+            ch = re.findall(('(?:%s)(.)') % word, text)
+            ed = len(ch)
+            ch = Counter(ch).values()
+            for v in ch:
+                RE[word] -= v / ed * math.log2(v / ed)
+        LE = sorted(LE.items(), key=lambda item: item[1], reverse=True)        # 左邻接熵从大到小排序
+        RE = sorted(RE.items(), key=lambda item: item[1], reverse=True)        # 右邻接熵从大到小排序
+        LE = dict(LE[:len(LE) // 5 if len(words) >= 5 else 1])                # 保留左邻接熵排名前20%的未登陆词
+        RE = dict(RE[:len(RE) // 5 if len(words) >= 5 else 1])                # 保留右邻接熵排名前20%的未登陆词
+        LE = set(LE.keys())
+        RE = set(RE.keys())
+        words = LE & RE
+        words = {k: original_words[k] for k in words}
+        return words
 
     def reworddict(self, cdict):
         """
@@ -368,6 +422,13 @@ def main():
     time_end = time.time()
     print('被切分文本： ' + text)
     print('最终切分结果： ' + st)
+    print("time cost:", time_end - time_start, 's\n')
+    # 未登录词识别
+    time_start = time.time()
+    with open(os.getcwd() + '/COAE2015微博观点句识别语料.txt', encoding='UTF-8-sig') as fp:
+        words = model.findwords(fp)
+    time_end = time.time()
+    print('未登录词识别结果：', words)
     print("time cost:", time_end - time_start, 's')
     pass
 
