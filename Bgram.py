@@ -32,6 +32,7 @@ class _NGramModel:
         """
         模型初始化
         :param cdict: 词典资源
+        :param train: 训练集
         :param smooth: 选取平滑方式序号
         :return: None
         """
