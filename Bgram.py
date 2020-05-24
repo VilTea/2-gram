@@ -229,7 +229,7 @@ class _NGramModel:
         """
         return (self._pre_dict.get(word, dict()).get(word_pre, 0) + 1) / (self._train_dict.get(word, 0) + self._V)
 
-    def findwords(self, text):
+    def findwords(self, text, word_len=2):
         """
         未登录词识别（二字词）
         :param text:语料
@@ -242,7 +242,7 @@ class _NGramModel:
         #text = re.sub(r'[a-zA-Z0-9]', '', text)             # 去除数字和字母
         total = len(text)
         character = dict(Counter(text))
-        original_words = _word_ngrams(tokens=text, ngram_range=(2, 2), separator='')
+        original_words = _word_ngrams(tokens=text, ngram_range=(word_len, word_len), separator='')
 
         words = {}
         for word in original_words:
