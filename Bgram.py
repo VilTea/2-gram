@@ -238,20 +238,18 @@ class _NGramModel:
         """
         # original_txt = text
         text = text.read()
-        text = re.sub(r'[^\u4e00-\u9fa5]', '', text)
-        #text = re.sub(r'\W+', '', text.replace('_', ''))    # 去除符号
-        #text = re.sub(r'[a-zA-Z0-9]', '', text)             # 去除数字和字母
+        text = re.sub(r'<[^>]+>', '', text)                  # 去除标签
+        text = re.sub(r'[^\u4e00-\u9fa5]+', ' ', text)       # 去除非中文字符
+        '''text = re.sub(r'\W+', '', text.replace('_', ''))    # 去除符号
+        text = re.sub(r'[a-zA-Z0-9]', '', text)             # 去除数字和字母'''
         total = len(text)
         character = dict(Counter(text))
         original_words = _word_ngrams(tokens=text, ngram_range=(word_len, word_len), separator='')
 
-        words = {}
-        for word in original_words:
-            if word not in self._word_dict:
-                words[word] = words.get(word, 0) + 1
-        words = dict(Counter(words))
-        words = {k: v for k, v in words.items() if v >= 3}      # 去除词频小于3的二字词
-        original_words = words.copy()                           # 保留词频
+        words = dict(Counter(original_words))
+        # 去除已登录词与词频小于3的二字词
+        words = {k: v for k, v in words.items() if ' ' not in k and k not in self._word_dict and v >= 3}
+        original_words = words.copy()                                                                     # 保留词频
         for word in words:
             # 点互信值(PMI)
             # log ((词频/总字数) / ( (单字1频数/总字数) * (单字2频数/总字数) )
@@ -272,7 +270,7 @@ class _NGramModel:
             ed = len(ch)
             ch = Counter(ch).values()
             for v in ch:
-                RE[word] -= v / ed * math.log2(v / ed)
+                RE[word] -= v/ed * math.log2(v/ed)
         LE = sorted(LE.items(), key=lambda item: item[1], reverse=True)        # 左邻接熵从大到小排序
         RE = sorted(RE.items(), key=lambda item: item[1], reverse=True)        # 右邻接熵从大到小排序
         LE = dict(LE[:len(LE) // 5 if len(words) >= 5 else 1])                # 保留左邻接熵排名前20%的未登陆词
@@ -366,16 +364,14 @@ class _NGramModel:
             except ValueError:
                 raise ValueError(
                     'invalid dictionary entry in %s at Line %s: %s' % (test.name, lineno, line))  # 错误处理 文件 行号 行
-        pm, pd = list(), list()     # 正确答案个数、总输出数
+        pm, pd = 0, 0       # 正确答案个数、总输出数
         rd = 0                      # 标准答案个数
         for lineno, line in enumerate(testline):    # 使用区间表示分词情况
             st1 = self.split(line)
             words1 = st1.split('/')
             words2 = answerline[lineno].split('\t')
-            pm.append(0)        # 初始化单句准确率分子
-            pd.append(0)        # 初始化单句准确率分母
-            rd += len(words2)   # 召回率分母
-            pd[lineno] += len(words1)
+            rd += len(words2)       # 单次标准答案个数
+            pd += len(words1)       # 单次输出数
             word1 = set()
             flag = 1
             for word in words1:
@@ -386,9 +382,9 @@ class _NGramModel:
             for word in words2:
                 word2.add((flag, len(word)))
                 flag += len(word)
-            pm[lineno] += len(word1 & word2)
-        precision = sum(pm) / sum(pd)
-        recall = sum(pm) / rd
+            pm += len(word1 & word2)  # 单次正确答案个数
+        precision = pm / pd
+        recall = pm / rd
         f1 = 2 * precision * recall / (precision + recall)
         return precision, recall, f1
 
