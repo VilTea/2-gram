@@ -247,15 +247,15 @@ class _NGramModel:
         original_words = _word_ngrams(tokens=text, ngram_range=(word_len, word_len), separator='')
 
         words = dict(Counter(original_words))
-        # 去除已登录词与词频小于3的二字词
-        words = {k: v for k, v in words.items() if ' ' not in k and k not in self._word_dict and v >= 3}
+        # 去除已登录词与词频小于50的二字词
+        words = {k: v for k, v in words.items() if ' ' not in k and k not in self._word_dict and v >= 50}
         original_words = words.copy()                                                                     # 保留词频
         for word in words:
             # 点互信值(PMI)
             # log ((词频/总字数) / ( (单字1频数/总字数) * (单字2频数/总字数) )
             words[word] = math.log2(words[word] / character[word[0]] / character[word[1]] * total)
         words = sorted(words.items(), key=lambda item: item[1], reverse=True)   # 根据PMI从大到小排序
-        words = dict(words[:len(words)//500 if len(words) >= 500 else 1])       # 保留点互信值排名前0.2%的未登陆词
+        words = dict(words[:int(len(words) * 0.05) if len(words) >= 20 else 1])       # 保留点互信值排名前5%的未登陆词
         temp = words.keys()
         LE = dict.fromkeys(temp, 0)   # 左邻接熵初始化
         RE = dict.fromkeys(temp, 0)   # 右邻接熵初始化
@@ -273,8 +273,8 @@ class _NGramModel:
                 RE[word] -= v/ed * math.log2(v/ed)
         LE = sorted(LE.items(), key=lambda item: item[1], reverse=True)        # 左邻接熵从大到小排序
         RE = sorted(RE.items(), key=lambda item: item[1], reverse=True)        # 右邻接熵从大到小排序
-        LE = dict(LE[:len(LE) // 5 if len(words) >= 5 else 1])                # 保留左邻接熵排名前20%的未登陆词
-        RE = dict(RE[:len(RE) // 5 if len(words) >= 5 else 1])                # 保留右邻接熵排名前20%的未登陆词
+        LE = dict(LE[:int(len(LE)*0.3) if len(words) >= 3 else 1])                # 保留左邻接熵排名前30%的未登陆词
+        RE = dict(RE[:int(len(RE)*0.3) if len(words) >= 3 else 1])                # 保留右邻接熵排名前30%的未登陆词
         LE = set(LE.keys())
         RE = set(RE.keys())
         words = LE & RE
