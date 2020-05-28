@@ -248,7 +248,7 @@ class _NGramModel:
 
         words = dict(Counter(original_words))
         # 去除已登录词与词频小于50的二字词
-        words = {k: v for k, v in words.items() if ' ' not in k and k not in self._word_dict and v >= 50}
+        words = {k: v for k, v in words.items() if ' ' not in k and v >= 50 and k not in self._word_dict}
         original_words = words.copy()                                                                     # 保留词频
         for word in words:
             # 点互信值(PMI)
